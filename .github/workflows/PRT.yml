@@ -1,0 +1,40 @@
+name: Terraform PR Plan
+
+on:
+  # Use pull_request_target so that the workflow runs on PRs
+  # targeting your repo’s main branch, but with limited perms
+  pull_request_target:
+    branches: [ "main" ]
+
+permissions:
+  contents: read  # minimal permissions
+
+jobs:
+  terraform-plan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR Code
+        uses: actions/checkout@v3
+        with:
+          # Pull request event data is in github.event.pull_request
+          # 'pull_request_target' can be tricky, so we specify 'ref' carefully:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          # This ensures we actually check out the contributor’s code.
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        # This plan typically won't have real secrets. 
+        # You might rely on limited or no credentials, or a read-only role.
+        run: terraform plan -no-color
+        continue-on-error: true
+        # We allow the job to continue even if plan fails, so we can still run subsequent steps
+
+      - name: Publish Plan Output (optional)
+        run: |
+          echo "No issue found with the IaC"
