@@ -22,3 +22,5 @@ jobs:
       - name: Terraform Plan
         run: terraform plan -no-color
         # Show the plan result in PR checks, but not applying yet
+      - name: LS
+        run: ls -lah
